@@ -5,9 +5,6 @@ import org.springframework.stereotype.Repository;
 import zerobase.weather.domain.Diary;
 
 @Repository
-public class DiaryRepository {
+public interface DiaryRepository extends JpaRepository<Diary, Integer> {
 
 }
-//public interface DiaryRepository extends JpaRepository<Diary, Integer> {
-
-//}

@@ -1,10 +1,13 @@
 package zerobase.weather.service;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import zerobase.weather.domain.Diary;
+import zerobase.weather.repository.DiaryRepository;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -16,16 +19,21 @@ import java.util.Map;
 
 @Service
 public class DiaryService {
-    // 1. open weather map 에서 데이터 받아오기
-    // 2. 받아온 날씨 데이터 파싱하기
-    // 3. 우리 DB에 저장하기
-
+/* 1. open weather map 에서 데이터 받아오기
+ 2. 받아온 날씨 데이터 파싱하기
+ 3. 우리 DB에 저장하기*/
 
     @Value("${openweathermap.key}") // application.properties
     private String apiKey;
     // 여기에 key 값을 직접 넣어줄 수도 있는데 왜 properties에 넣어야 하느냐?
     // real, test, local 세 가지의 환경이 다 같은 DB를 바라보지 않기 때문에
     // 실제 DB에 반영이 되면 안됨! -> 환경마다 properties를 다르게 쓴다
+
+    private final DiaryRepository diaryRepository;
+
+    public DiaryService(DiaryRepository diaryRepository) {
+        this.diaryRepository = diaryRepository;
+    }
 
 
     public void createDiary(LocalDate date, String text) {
@@ -36,6 +44,14 @@ public class DiaryService {
         Map<String, Object> parseWeather = parseWeather(weatherData);
 
         // 3. 우리 DB에 저장하기
+        // Diary 객체를 DiaryRepository 를 통해서 DB에 넣을 것임!
+        Diary nowDiary = new Diary();
+        nowDiary.setWeather(parseWeather.get("main").toString());
+        nowDiary.setIcon(parseWeather.get("icon").toString());
+        nowDiary.setTemperature((Double) parseWeather.get("temp"));
+        nowDiary.setText(text);
+        nowDiary.setDate(date);
+        diaryRepository.save(nowDiary);
     }
 
     // open weather map 에서 날씨정보를 가져와서 string 으로 변환하려고
@@ -93,9 +109,13 @@ public class DiaryService {
 
         Map<String, Object> resultMap = new HashMap<>();
 
-        JSONObject weatherData = (JSONObject) jsonObject.get("weather");
+
+//        JSONObject weatherData = (JSONObject) jsonObject.get("weather");
+        JSONArray weatherArray = (JSONArray) jsonObject.get("weather");
+        JSONObject weatherData = (JSONObject) weatherArray.get(0);
         resultMap.put("main", weatherData.get("main"));
         resultMap.put("icon", weatherData.get("icon"));
+
         JSONObject mainData = (JSONObject) jsonObject.get("main");
         resultMap.put("temp", mainData.get("temp"));
 
