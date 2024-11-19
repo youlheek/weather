@@ -6,6 +6,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import zerobase.weather.domain.Diary;
 import zerobase.weather.repository.DiaryRepository;
 
@@ -15,13 +16,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class DiaryService {
-/* 1. open weather map 에서 데이터 받아오기
- 2. 받아온 날씨 데이터 파싱하기
- 3. 우리 DB에 저장하기*/
 
     @Value("${openweathermap.key}") // application.properties
     private String apiKey;
@@ -53,6 +52,29 @@ public class DiaryService {
         nowDiary.setDate(date);
         diaryRepository.save(nowDiary);
     }
+
+    // # 01 날씨 일기 조회 API 구현
+    public List<Diary> readDiary(LocalDate date) {
+        return diaryRepository.findAllByDate(date);
+    }
+
+    public List<Diary> readDiaries(LocalDate startDate, LocalDate endDate) {
+        return diaryRepository.findAllByDateBetween(startDate, endDate);
+    }
+
+    // # 02 날씨 일기 수정 API 구현
+    // 해당 날짜의 일기가 여러개 있을 경우 가장 첫번째 것을 수정
+    public void updateDiary(LocalDate date, String text) {
+        Diary nowDiary = diaryRepository.getFirstByDate(date);
+        nowDiary.setText(text);
+        diaryRepository.save(nowDiary);
+    }
+
+    // # 03 날씨 일기 삭제 API 구현
+    public void deleteDiary(LocalDate date) {
+        diaryRepository.deleteAllByDate(date);
+    }
+
 
     // open weather map 에서 날씨정보를 가져와서 string 으로 변환하려고
     private String getWeatherString() {
