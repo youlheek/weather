@@ -14,7 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
-@Transactional
+@Transactional // test 코드에 Transactional 을 쓰게 되면 Commit을 안 시킴, Rollback 처리
+// -> @Test 등 테스트 어노테이션의 존재 여부를 통해 스프링이 알 수 있음
 public class JpaMemoRepositoryTest {
 
     @Autowired
