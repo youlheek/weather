@@ -4,11 +4,14 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import zerobase.weather.WeatherApplication;
 import zerobase.weather.domain.DateWeather;
 import zerobase.weather.domain.Diary;
 import zerobase.weather.repository.DateWeatherRepository;
@@ -36,6 +39,11 @@ public class DiaryService {
     private final DiaryRepository diaryRepository;
     private final DateWeatherRepository dateWeatherRepository;
 
+    // 어디서 로거를 쓸것인지에 대한 설정
+    // 우리는 프로젝트 전체에서 쓸 것이기 때문에 WeatherApplication.class 로 지정하였다
+    // 📍 근데 로거 설정을 왜 서비스에서 하는지...?
+    private static final Logger logger = LoggerFactory.getLogger(WeatherApplication.class);
+
     public DiaryService(DiaryRepository diaryRepository, DateWeatherRepository dateWeatherRepository) {
         this.diaryRepository = diaryRepository;
         this.dateWeatherRepository = dateWeatherRepository;
@@ -47,6 +55,7 @@ public class DiaryService {
     public void saveWeatherDate() {
         dateWeatherRepository.save(getWeatherFromApi());
     }
+
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public void createDiary(LocalDate date, String text) {
@@ -69,11 +78,13 @@ public class DiaryService {
         nowDiary.setDateWeather(dateWeather);
         nowDiary.setText(text);
         diaryRepository.save(nowDiary);
+        logger.info("end to createDiary");
     }
 
     // # 01 날씨 일기 조회 API 구현
     @Transactional(readOnly = true)
     public List<Diary> readDiary(LocalDate date) {
+        logger.debug("readDiary");
         return diaryRepository.findAllByDate(date);
     }
 
